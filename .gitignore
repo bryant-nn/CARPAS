@@ -1,0 +1,69 @@
+############################
+# System / Editor
+############################
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.log
+
+############################
+# Python
+############################
+venv/
+.conda/
+__pycache__/
+*.py[cod]
+*.pyo
+
+############################
+# Jupyter
+############################
+.ipynb_checkpoints/
+
+############################
+# Env / Local config
+############################
+.env
+*.env
+*.local
+
+############################
+# Cache / Temp
+############################
+.cache/
+*cache/
+tmp/
+*tmp/
+
+############################
+# Experiments / Data (BIG)
+############################
+
+# Synthetic data (raw & filtered)
+Synthetic_data/
+**/Synthetic_data/
+
+# Gemini / model generated data
+gemini_filtered_data/
+gemini_2.0-flash/
+gemini-2.0-flash/
+
+# All Result outputs
+Result/
+**/Result/
+
+############################
+# Allow small analysis artifacts
+############################
+
+# Keep evaluation notebooks
+!**/Result/eval_info.ipynb
+
+############################
+# Tests / Scratch
+############################
+*test.ipynb
+*rag_test.ipynb
+*/Result_error/
+*/Result_DecompEval/
