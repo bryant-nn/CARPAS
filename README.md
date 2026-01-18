@@ -1,82 +1,62 @@
 # CARPAS- Towards Content-Aware Refinement of Provided Aspects for Summarization in Large Language Models
 
-專案涵蓋：
-- ✅ **Synthetic Data 產生**
-- ✅ **Direct / Chain-of-Thought / Self-Consistency Prompt**
-- ✅ **LangGraph multi-step reasoning (Agentic)**
-- ✅ **多維度自動評估（LLM + BERTScore）**
+Project Features:
+- ✅ Synthetic Data Generation
+- ✅ Direct / Chain-of-Thought / Self-Consistency Prompting
+- ✅ LangGraph Multi-step Reasoning (Agentic)
+- ✅ Multi-dimensional Auto-Evaluation (LLM + BERTScore)📦 
 
----
-
-## 📦 專案總覽
-
+## Project Overview
 ```
-
-.
 ├── Finance/
 ├── Covid/
 ├── Real_word_data/
 ├── requirements.txt
 └── README.md
-
 ```
 
-### 📁 資料集（Datasets）
-
-本專案包含三個資料集：
-
-| Dataset | 說明 |
+### 📁 Datasets
+This project includes three datasets:
+| Dataset | Description |
 |------|------|
-| `Finance/` | 合成財報 / earnings call 類型文件 |
-| `Covid/` | 疫情 / 公共衛生報告 |
-| `Real_word_data/` | 真實世界文件|
+| `Finance/` | Synthetic financial reports |
+| `Covid/` | Pandemic / Public health reports |
+| `Real_word_data/` | Real-world documents|
 
-每個資料集結構完全一致，方便跨資料集比較。
-
----
-
-## 📂 Dataset 結構說明（共通）
-
+## 📂 Dataset Structure (Common)
+```
+Dataset/
+├── Method/           # LLM inference and summarization methods
+├── Result/           # Model outputs and evaluation results
+└── Synthetic_data/   # Synthetic data generation and splitting
 ```
 
-Dataset/
-├── Method/           # LLM 推理與摘要方法
-├── Result/           # 模型輸出與評估結果
-└── Synthetic_data/   # 合成資料產生與切分
+## 🧬 Synthetic_data — Synthetic Data Generation
 
-````
+### 🎯 Function
+Uses LLMs (Gemini / GPT) to generate long documents with controlled aspect structures as sources for experiments.
 
----
-
-## 🧬 Synthetic_data — 合成資料產生
-
-### 🎯 功能
-使用 LLM（Gemini / GPT）產生 **可控 aspect 結構的長文件**，作為實驗資料來源。
-
-### 🔑 核心檔案
-
-| 檔案 | 功能 |
+### 🔑 Key Files
+| File | Function |
 |----|----|
-| `data_generation_gemini.py` | 使用 Gemini 產生合成文件與 aspect summaries |
-| `report_template.py` | aspect pool 與主題模板 |
-| `transcript_template.py` | 文件結構模板（如 earnings call） |
-| `data_split.py` | 切分 train / test |
-| `train.json` | 訓練資料路徑清單 |
-| `test.json` | 測試資料路徑清單 |
+| `data_generation_gemini.py` | Uses Gemini to generate synthetic documents and aspect summaries |
+| `report_template.py` | aspect pool and topic templates |
+| `transcript_template.py` | Document structure templates (e.g., earnings calls) |
+| `data_split.py` | Splits data into train / test |
+| `train.json` | List of training data paths |
+| `test.json` | List of testing data paths |
 
-### ▶️ 產生合成資料
-生成20份文件，每份包含4個aspect： 
-```bash
+### ▶️ Generating Synthetic Data
+Generate 20 documents, each containing 4 aspects:
+```Bash
 cd Finance/Synthetic_data
 python data_generation_gemini.py \
   --num_sample 20 \
   --num_aspect 4
-````
+  ```
 
-輸出格式（每個 `.json`）：
-
-```json
-{
+Output format (each .json):
+```JSON{
   "document": "... long document ...",
   "aspects": ["Aspect A", "Aspect B"],
   "aspect_summary": {
@@ -85,9 +65,7 @@ python data_generation_gemini.py \
   }
 }
 ```
-
-這些檔案會依模型與 aspect 數量存放，例如：
-
+These files are stored according to the model and aspect count, for example:
 ```
 Synthetic_data/
 └── gemini-2.0-flash/
@@ -97,51 +75,39 @@ Synthetic_data/
         └── ...
 ```
 
-### 合成資料品質過濾與切分（Data Filtering & Split）
+### Data Filtering & Split
+Since synthetic data may contain:
+- Incomplete documents
+- Aspect summaries with negative/invalid descriptions
+- Empty or low-quality content
+Data filtering and splitting must be performed before formal experiments.
 
-由於 synthetic data 可能包含：
-
-- 不完整文件
-
-- aspect summary 出現否定 / 無效描述
-
-- 文件內容為空或品質過低
-
-因此在正式實驗前，必須進行資料過濾與切分。
-
-🔑 核心檔案
-| 檔案 | 功能 |
+🔑 Key File:
+| File | Function |
 |----|----|
-data_split.py	| 過濾低品質資料，並產生 train.json / test.json
+| data_split.py | Filters low-quality data and generates train.json / test.json |
 
-
-## 🧠 data_split.py 過濾邏輯說明
-
-`data_split.py` 會執行以下資料過濾與切分流程：
-
-### ① 收集已通過篩選的 test 資料
-- 從 `gemini_filtered_data/` 目錄中蒐集所有 `.json` 檔案
-- 作為固定的測試資料來源（test set）
-
-### ② 過濾原始 synthetic data
-以下情況的資料會被排除：
-- aspect summary 中包含否定語句（如 `"does not"`）
-- 文件內容為空
-- JSON 檔案無法正確解析
-
-### ③ 避免資料重複
-- 確保 `train` 資料與 `test` 資料 **不重疊**
-- 避免資料洩漏（data leakage），確保實驗公平性
-
-### ④ 輸出資料清單
-- `train.json`：過濾後的高品質訓練 / warm-up 資料路徑清單  
-- `test.json`：固定測試資料，用於後續 Prompt / LangGraph 評估
+## 🧠 data_split.py Filtering Logic
+`data_split.py` executes the following filtering and splitting workflow:
+### ① Collect Qualified Test Data
+- Collects all .json files from the gemini_filtered_data/ directory.
+- Serves as the fixed source for the test set.
+### ② Filter Original Synthetic Data
+Data is excluded in the following cases:
+- The aspect summary contains negative phrases (e.g., "does not").
+- The document content is empty.
+- The JSON file cannot be parsed correctly.
+### ③ Prevent Data Duplication
+- Ensures no overlap between train data and test data.
+- Prevents data leakage to ensure experimental fairness.
+### ④ Output Data Lists
+- train.json: List of filtered high-quality training / warm-up data paths.
+- test.json: Fixed test data list used for subsequent Prompt / LangGraph evaluation.
 
 ---
 
-## ▶️ 執行資料過濾與切分
-
-```bash
+## ▶️ Execute Data Filtering and Split
+```Bash
 cd Finance/Synthetic_data
 python data_split.py
 ```
@@ -149,38 +115,37 @@ python data_split.py
 ---
 
 ## 🧠 Method — Aspect Summarization
-
-### 兩種主要方法
-
-| 方法           | 檔案                    | 特點                          |
+### Two Main Approaches
+| Method           | File                    | Features                          |
 | ------------ | --------------------- | --------------------------- |
 | Prompt-based | `prompt.py`           | Direct / CoT / CoT Self-Consistency |
 | Agentic-based  | `langgraph_guided.py` | Self-Refine Prompt             |
 
 ---
 
-## 🧩 prompt.py — Prompt-based 方法
+## 🧩 prompt.py — Prompt-based Method
 
-### 🔹 支援模式
+### 🔹 Supported Modes 
 
-| `cot_mode` | 說明                        |
+| `cot_mode` | Description                        |
 | ---------- | ------------------------- |
-| `direct`   | 無推理，直接輸出                  |
+| `direct`   | Direct output without reasoning                  |
 | `cot`      | Chain-of-Thought          |
-| `cot_sc`   | Self-Consistency（多次取樣再整合） |
+| `cot_sc`   | Self-Consistency (Sampling multiple times and aggregating) |
 
-### 🔹 y / n 參數說明
+### 🔹 Parameters y / n
 
-| 參數  | 意義                               |
+| Parameter | Meaning                               |
 | --- | -------------------------------- |
-| `y` | 從 ground truth 中抽樣的正確 aspects 數量 |
-| `n` | 隨機加入的不相關 aspects 數量              |
+| `y` | Number of correct aspects sampled from the ground truth |
+| `n` | Number of randomly added irrelevant aspects              |
 
-→ 用來測試模型 **過濾錯誤主題與補齊缺失主題的能力**
+→ Used to test the model's ability to **filter incorrect topics and complete missing topics.**
 
-### ▶️ 執行範例
-- 執行 Preliminary with Direct Prompt
-```bash
+### ▶️ Execution Examples
+
+- Execute Preliminary with Direct Prompt
+```Bash
 cd Covid/Method
 
 python prompt.py \
@@ -190,8 +155,7 @@ python prompt.py \
   --n 2 \
 ```
 
-- 輸出位置
-
+- Output Location:
 ```
 Result/
 └── cot_sc_prompt_with_predicted_aspect/
@@ -199,9 +163,9 @@ Result/
         └── gpt-4o/
             └── 4_sample_12.json
 ```
-  
-- 執行 #Aspect-LLM with CoT-SC
-```bash
+
+- Execute #Aspect-LLM with CoT-SC
+```Bash
 cd Covid/Method
 
 python prompt.py \
@@ -213,7 +177,8 @@ python prompt.py \
   --provide_aspect_num \
   --aspect_source predict
 ```
-- 輸出位置
+
+- Output Location:
 ```
 Result/
 └── cot_sc_prompt_with_predicted_aspect/
@@ -221,9 +186,8 @@ Result/
         └── gemini-2.5-flash-lite/
             └── 4_sample_12.json
 ```
-
-- 執行 #Aspect-RM with CoT
-```bash
+- Execute #Aspect-RM with CoT
+```Bash
 cd Covid/Method
 
 python prompt.py \
@@ -235,8 +199,10 @@ python prompt.py \
   --provide_aspect_num \
   --aspect_source csv
 ```
-- 輸出位置
-```Result/
+
+- Output Location:
+```
+Result/
 └── cot_prompt_with_csv_aspect/
     └── gemini_filtered_data_y2n2/
         └── gemma-3-12b/
@@ -247,16 +213,15 @@ python prompt.py \
 
 ## 🔗 langgraph_guided.py — Self-Refine Prompt
 
-### 🔹 流程概念
+### 🔹 Workflow Concept
+1. Check coverage: Determine if current aspects cover the key points of the article.
+2. Revise aspects: Retain / Modify / Delete / Add aspects.
+3. Iterate: (Max ~14 steps).
+4. Summarize aspects.
 
-1. **Check coverage**：判斷目前 aspects 是否已涵蓋文章重點
-2. **Revise aspects**：保留 / 修改 / 刪除 / 新增 aspects
-3. **Iterate**（最多 ~14 步）
-4. **Summarize aspects**
-
-### ▶️ 執行範例
-- 執行 Preliminary
-```bash
+### ▶️ Execution Examples
+- Execute Preliminary
+```Bash
 cd Covid/Method
 
 python langgraph_guided.py \
@@ -266,7 +231,8 @@ python langgraph_guided.py \
   --n 2 \
   --api_key YOUR_OPENAI_API_KEY
 ```
-- 輸出位置
+
+- Output Location:
 ```
 Result/
 └── langgraph/no_memory/
@@ -274,8 +240,9 @@ Result/
         └── gpt-4o-mini/
             └── 4_sample_12.json
 ```
-- 執行 #Aspect-LLM
-```bash
+
+- Execute #Aspect-LLM
+```Bash
 cd Covid/Method
 
 python langgraph_guided.py \
@@ -287,16 +254,19 @@ python langgraph_guided.py \
   --aspect_source predict \
   --api_key YOUR_OPENAI_API_KEY
 ```
-- 輸出位置
+
+- Output Location:
+
 ```
 Result/
 └── langgraph_prompt_with_predicted_aspect/no_memory/
     └── gemini_filtered_data_y2n2/
         └── gpt-4o-mini/
             └── 4_sample_12.json
-```
-- 執行 #Aspect-RM
-```bash
+``` 
+
+- Execute #Aspect-RM
+```Bash
 cd Covid/Method
 
 python langgraph_guided.py \
@@ -308,7 +278,8 @@ python langgraph_guided.py \
   --aspect_source csv \
   --api_key YOUR_OPENAI_API_KEY
 ```
-- 輸出位置
+
+- Output Location:
 ```
 Result/
 └── langgraph_prompt_with_csv_aspect/no_memory/
@@ -319,11 +290,11 @@ Result/
 
 ---
 
-## 📊 Result — 模型輸出結果
+## 📊 Result — Model Output
 
-每個輸出 `.json` 內容包含：
+Each output .json contains:
 
-```json
+```JSON
 {
   "document": "...",
   "ground_truth_aspects": [...],
@@ -338,49 +309,43 @@ Result/
 }
 ```
 
-## 📏 Chat Evaluation — 自動評估
+## 📏 Chat Evaluation — Auto-Evaluation
+🔍 Metrics
 
-### 🔍 評估指標
-
-| 指標               | 說明                      |
+| Metric           | Description                      |
 | ---------------- | ----------------------- |
-| Factuality       | LLM 判斷摘要是否忠於原文          |
-| Relevance        | aspect coverage + 數量合理性 |
-| Aspect BERTScore | aspect 名稱語意對齊程度         |
+| Factuality       | LLM judgment on whether the summary is faithful to the original text |
+| Relevance        | aspect coverage + Reasonableness of quantity |
+| Aspect BERTScore | Semantic alignment of aspect names |
 
-### ▶️ 執行評估
-
-```bash
+### ▶️ Execute Evaluation
+```Bash
 cd Covid/Method
 python chat_eval.py
 ```
 
-輸出會寫入：
-
+Results will be written to:
 ```
 Result/Chat_eval/...
 ```
 
 ---
 
-## ⚙️ 環境設定
 
-```bash
+## ⚙️ Environment Setup
+
+```Bash
 pip install -r requirements.txt
 ```
-
-`.env` 需包含（視使用模型）：
+`.env` needs to include (depending on the models used):
 
 ```env
 OPENAI_API_KEY=...
 GEMINI_API_KEY=...
 ```
 
----
-
-## 🔁 建議實驗流程（Quick Start）
-
-```text
+## 🔁 Recommended Workflow (Quick Start)
+```
 1. Synthetic_data/
    ├── data_generation_gemini.py
    └── data_split.py
@@ -393,58 +358,49 @@ GEMINI_API_KEY=...
    └── chat_eval.py
 ```
 
-## 🔢 train_ddp.py — Aspect 數量預測模型（DDP 訓練）
+## 🔢 train_ddp.py — Aspect Count Prediction Model (DDP Training)
 
-`train_ddp.py` 用於訓練一個 **文件層級的 Aspect 數量預測模型**，目標是根據整篇文章內容，自動預測該文件中應該包含的 **aspect 數量**。
+`train_ddp.py` is used to train a **document-level Aspect Number Prediction Model**, aimed at automatically predicting the number of aspects a document should contain based on the full text.
 
-此模型的預測結果可用於：
-- 在 `prompt.py` / `langgraph_guided.py` 中作為 **aspect 數量提示（count hint）**
-- 協助 LLM 生成「數量合理、不過多也不過少」的 aspects
-- 降低 hallucination 與過度切分主題的問題
+The prediction results from this model can be used:
+- As an aspect count hint in `prompt.py` / `langgraph_guided.py`.
+- To assist the LLM in generating "reasonable quantities (neither too many nor too few)" of aspects.
+- To reduce hallucination and the issue of over-fragmenting topics.
 
----
+### 🧠 Model Concept
 
-### 🧠 模型概念
+- **Task Type**: Regression
+- **Input**: Full document
+- **Output**: Number of aspects for the document (Integer)
+- **Loss**: L1 Loss (MAE)
+- **Evaluation Metrics**:
+    - MAE (Mean Absolute Error)
+    - Rounded Accuracy (Whether the prediction is correct after rounding)
 
-- **任務類型**：回歸（Regression）
-- **輸入**：完整文章（document）
-- **輸出**：該文章的 aspect 數量（整數）
-- **Loss**：L1 Loss（MAE）
-- **評估指標**：
-  - MAE（Mean Absolute Error）
-  - Rounded Accuracy（四捨五入後是否預測正確）
+### 🏗 Model Architecture
+- **Base Model**: Qwen/Qwen3-Embedding-0.6B
+- **Pooling**: Mean Pooling over token embeddings
+- **Head**: MLP Regression Head
+- **Fine-tuning Method**: LoRA (PEFT) - Fine-tuning only attention / MLP sub-modules
+- **Training Method**: Supports Single GPU / Multi-GPU Distributed Data Parallel (DDP)
 
----
 
-### 🏗 模型架構
-
-- **Base Model**：`Qwen/Qwen3-Embedding-0.6B`
-- **Pooling**：Mean Pooling over token embeddings
-- **Head**：MLP Regression Head
-- **Fine-tuning 方法**：
-  - LoRA（PEFT）
-  - 僅微調 attention / MLP 子模組
-- **訓練方式**：
-  - 支援單卡 / 多卡 Distributed Data Parallel (DDP)
-
----
-
-### 📂 訓練資料來源
-
-- 由 `Synthetic_data/data_split.py` 產生：
-  - `train.json`
-  - `test.json`
-- 每筆資料包含：
-  - `document`
-  - `aspects`（用於計算 ground-truth aspect 數量）
+### 📂 Training Data Source
+- Generated by `Synthetic_data/data_split.py`:
+    - `train.json`
+    - `test.json`
+- Each entry contains:
+    - `document`
+    - `aspects` (Used to calculate ground-truth aspect count)
 
 ---
 
-### ▶️ 訓練模型
+### ▶️ Train Model
 
-```bash
+```
 cd Covid/Method
 
 python train_ddp.py \
   --mode train \
   --output_dir aspect_count_model
+```
