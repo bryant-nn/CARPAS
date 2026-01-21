@@ -1,0 +1,22 @@
+{
+  "document": "",
+  "aspects": [
+    "M&A activity and strategic rationale.",
+    "Demand trends in key end markets (construction, mining, agriculture, manufacturing).",
+    "Lead times for key products and components.",
+    "Inventory levels and management strategies.",
+    "Gross margin and operating margin trends.",
+    "Supply chain constraints and component availability updates."
+  ],
+  "aspect_summary": {
+    "M&A activity and strategic rationale.": "No information provided in the transcript.",
+    "Demand trends in key end markets (construction, mining, agriculture, manufacturing).": "No information provided in the transcript.",
+    "Lead times for key products and components.": "No information provided in the transcript.",
+    "Inventory levels and management strategies.": "No information provided in the transcript.",
+    "Gross margin and operating margin trends.": "No information provided in the transcript.",
+    "Supply chain constraints and component availability updates.": "No information provided in the transcript."
+  },
+  "num_aspects": 6,
+  "category": "manufacturing",
+  "category_name": "Manufacturing / Industrial Equipment"
+}
