@@ -6,6 +6,22 @@ Project Features:
 - ✅ LangGraph Multi-step Reasoning (Agentic)
 - ✅ Multi-dimensional Auto-Evaluation (LLM + BERTScore)📦 
 
+---
+
+## 📊 Additional Experimental Results
+
+### A.1 Quantitative Results
+Tables 7, 8, and 9 present the complete evaluation metrics, including BERTScore, ROUGE-1, ROUGE-2, and ROUGE-L, for the three datasets. The **#Aspect-RM** outperforms both the Preliminary Experiments and the #Aspect-LLM. Furthermore, GPT-based models achieve their best performance when paired with the Self-Refine strategy.
+
+![Quantitative Results - Tables 7, 8, 9](Exp_Asset/exp_results_3_datasets.png)
+
+### A.2 Additional Models
+We additionally run experiments with two other reasoning models, **o3-mini** and **Gemini-2.5-Flash-Lite**, on the three datasets. As shown in Tables 10, 11, and 12, #Aspect-RM continues to achieve the highest scores, and o3-mini demonstrates the best performance under the Self-Refine strategy.
+
+![Reasoning Model Results - Tables 10, 11, 12](Exp_Asset/rsn_exp_results_3_datasets.png)
+
+---
+
 ## Project Overview
 ```
 ├── Finance/
@@ -103,6 +119,78 @@ Data is excluded in the following cases:
 ### ④ Output Data Lists
 - train.json: List of filtered high-quality training / warm-up data paths.
 - test.json: Fixed test data list used for subsequent Prompt / LangGraph evaluation.
+
+---
+
+## 🏢 Multi-Category Synthetic Data Generation
+
+### Overview
+Extended data generation pipeline supporting **20 industry categories** with balanced aspect distribution.
+
+| Metric | Value |
+|--------|-------|
+| Total Categories | 20 |
+| Samples per Category | 50 |
+| Total Samples | **1,018** |
+| Aspect Distribution | 10 samples each for 4, 5, 6, 7, 8 aspects |
+
+### 📊 Industry Categories
+
+| Sector | Categories |
+|--------|------------|
+| **Technology** | software_saas, cloud_computing, ecommerce, cybersecurity |
+| **Energy** | oil_gas, renewable_energy, utilities |
+| **Financial** | banking, insurance, asset_management |
+| **Healthcare** | pharma_biotech, medical_devices, healthcare_services |
+| **Consumer** | consumer_goods, retail, food_beverage |
+| **Industrial** | automotive, aerospace_defense, manufacturing |
+| **Telecom** | telecom |
+
+### 🔑 Key Files
+
+| File | Function |
+|------|----------|
+| `company_categories.py` | Defines 20 categories with industry-specific aspects |
+| `generate_industry_templates.py` | LLM-powered template generation |
+| `data_generation_multi_category.py` | Multi-category data generation with Pydantic structured output |
+| `gen_all_categories.sh` | Batch script for all 20 categories |
+| `data_stats.py` | Statistics by category and aspect count |
+| `data_split.py` | Stratified train/test split |
+
+### ▶️ Generate Multi-Category Data
+
+```bash
+cd Finance/Synthetic_data
+
+# Generate for a single category
+python data_generation_multi_category.py \
+  --category software_saas \
+  --num_sample 50
+
+# Generate for all 20 categories (1000 samples)
+./gen_all_categories.sh
+```
+
+### 📁 Output Structure
+```
+output/
+├── software_saas/
+│   ├── sample_001_4aspects.json
+│   ├── sample_002_5aspects.json
+│   └── ...
+├── oil_gas/
+├── banking/
+└── ... (20 categories)
+```
+
+### 📊 Run Statistics & Split
+```bash
+# Generate statistics
+python data_stats.py
+
+# Train/test split (80/20)
+python data_split.py
+```
 
 ---
 
