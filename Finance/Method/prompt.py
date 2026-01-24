@@ -25,7 +25,6 @@ TOKEN_LIMIT_PER_MIN = 14000000000
 
 def wait_for_token_budget(tokens_needed):
     now = time.time()
-    # 移除超過一分鐘的紀錄
     while token_window and now - token_window[0][0] > 60:
         token_window.popleft()
 
@@ -295,11 +294,8 @@ def generate_revised_aspects_and_summary(
         if not all_responses:
             return {}, 0
 
-        # time.sleep(10)
         final, tokens3 = final_answer_from_multiple_responses(all_responses, article, given_aspects, model, gemini_api_key=gemini_api_key, predicted_aspect=predicted_aspect_num)
-        # time.sleep(60)
 
-        # print(f"Final response from {model}:\n{final}\n")
 
         return final, temp_tokens + tokens3, statistics.median(total_aspects_nums) if total_aspects_nums else 0
 
@@ -318,8 +314,6 @@ def generate_revised_aspects_and_summary(
             parsed = summaries
             tokens2 = 0
         except:
-            # print("❌ Failed to parse JSON response from model.")
-            # print(f"Response from LLM:\n{response}\n")
             parsed, tokens2 = parse_captain_result(response)
         # print(f"Parsed result: {parsed}\n")
 
@@ -390,8 +384,6 @@ def _chat_completion(prompt: str, model: str, temperature: float, llm_client) ->
         # print(f"{response.choices[0].message.content.strip()}")
         actual_tokens = response.usage.total_tokens
         record_token_usage(actual_tokens)
-
-        # print(f'✅ API call successful:{actual_tokens} tokens for this request.')
 
         return response.choices[0].message.content.strip(), actual_tokens
     except Exception as e:

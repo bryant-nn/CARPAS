@@ -33,7 +33,6 @@ TOKEN_LIMIT_PER_MIN = 12000
 def wait_for_token_budget(tokens_needed: int):
     now = time.time()
 
-    # 移除超過60秒的紀錄
     while token_window and now - token_window[0][0] > 61:
         token_window.popleft()
 
@@ -41,7 +40,6 @@ def wait_for_token_budget(tokens_needed: int):
 
     if current_total + tokens_needed > TOKEN_LIMIT_PER_MIN:
         wait_time = 60 - (now - token_window[0][0])
-        # print(f"⏳ Token limit reached ({current_total + tokens_needed} > {TOKEN_LIMIT_PER_MIN}), waiting {int(wait_time)+1}s...")
         time.sleep(wait_time + 10)
 
 def record_token_usage(tokens_used: int):
@@ -142,13 +140,9 @@ Aspects:
     estimate_prompt_tokens = estimate_tokens(prompt)
     estimated_tokens = estimate_prompt_tokens + 1500  # prompt word count + buffer
     wait_for_token_budget(estimated_tokens)
-    # print("🔄 Checking coverage...")
-    # print(f"🔄 Prompt:\n{prompt}")
 
     first_response = llm.invoke([HumanMessage(content=prompt)])
-    # print(f"🔄 Model Response:\n{first_response.content.strip()}")
     response = first_response.content.strip().upper()
-    # print(f"🔄 Model Response:\n{response}")
     
     if 'token_usage' in first_response.response_metadata:
         tokens = first_response.response_metadata['token_usage']['total_tokens']
@@ -238,14 +232,6 @@ Only return the updated list of aspect titles in the following list format:
 
     match = re.search(r"\[.*?\]", response, re.DOTALL)
 
-    # if not match:
-    #     print(f"❌ Failed to parse response from model. Response was:\n{response}")
-    #     print(1/0)
-
-    # print(f"🔄 Model Response:\n{match.group(0)}")
-    # print(1/0)
-    # else:
-    # print(f"🔄 Model Response:\n{response}")
     revised = ast.literal_eval(match.group(0))
 
     # time.sleep(60)
@@ -283,8 +269,6 @@ Please only return your output in the following JSON format:
     estimate_prompt_tokens = estimate_tokens(prompt)
     estimated_tokens = estimate_prompt_tokens + 2800  # prompt word count + buffer
     wait_for_token_budget(estimated_tokens)
-
-    # print("🔄 Summarizing aspects...")
     
     first_response = llm.invoke([HumanMessage(content=prompt)])
     response = first_response.content.strip().replace("```json", "").replace("```", "")
@@ -470,16 +454,9 @@ if __name__ == "__main__":
     for key, value in report_template_dict.items():
         all_aspects.extend(value if isinstance(value, list) else [value])
 
-    # with open('../../Synthetic_data/gpt4o_filtered_data_220/train_files.json', 'r') as f:
-    #     train_files = json.load(f)
-
-    # with open("../Synthetic_data/test.json", "r", encoding='utf-8') as f:
-    #     test_files = json5.load(f)
 
     folder_path = '../Synthetic_data/synthetic_final_dataset/test'
     test_files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
-    # print(len(files))
-    # print(1/0)
 
     if args.provide_aspect_num:
         output_folder = f"../Result/langgraph{'_prompt_with_predicted_aspect' if args.aspect_source == "predict" else '_prompt_with_csv_aspect'}/{'use_memory' if args.memory else 'no_memory'}/gemini_filtered_data_y{args.y}n{args.n}/{MODEL_NAME}"

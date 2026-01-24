@@ -25,7 +25,6 @@ TOKEN_LIMIT_PER_MIN = 14000000000
 
 def wait_for_token_budget(tokens_needed):
     now = time.time()
-    # 移除超過一分鐘的紀錄
     while token_window and now - token_window[0][0] > 60:
         token_window.popleft()
 
@@ -267,8 +266,6 @@ def generate_revised_aspects_and_summary(
 
         for _ in range(num_samples):
             prompt, predicted_aspect_num, token_predict = build_prompt(article, aspects_str, style="cot")
-            # print(f"Prompt for {model}:\n{prompt}\n")
-            # print(1/0)
 
             total_aspects_nums.append(predicted_aspect_num)
 
@@ -283,9 +280,6 @@ def generate_revised_aspects_and_summary(
             except:
                 parsed, tokens2 = parse_captain_result(response)
 
-            # time.sleep(45)
-            # print(f"Response from {model}:\n{response}\n")
-            # print(1/0)
 
             if parsed:
                 all_responses.append(parsed)
@@ -295,9 +289,9 @@ def generate_revised_aspects_and_summary(
         if not all_responses:
             return {}, 0
 
-        # time.sleep(10)
+
         final, tokens3 = final_answer_from_multiple_responses(all_responses, article, given_aspects, model, gemini_api_key=gemini_api_key, predicted_aspect=predicted_aspect_num)
-        # time.sleep(60)
+
 
         # print(f"Final response from {model}:\n{final}\n")
 
@@ -318,10 +312,7 @@ def generate_revised_aspects_and_summary(
             parsed = summaries
             tokens2 = 0
         except:
-            # print("❌ Failed to parse JSON response from model.")
-            # print(f"Response from LLM:\n{response}\n")
             parsed, tokens2 = parse_captain_result(response)
-        # print(f"Parsed result: {parsed}\n")
 
         if cot_mode == "cot":
             # If using Chain of Thought, we need to extract the final summary from the structured reasoning
@@ -483,10 +474,6 @@ def main(
             with open(output_file, "w", encoding="utf-8") as f:
                 json.dump(result, f, ensure_ascii=False, indent=2)
 
-        # break
-
-        # if temp == 10:
-        #     break
 
 def load_prediction_csv(path="test_results.csv"):
     df = pd.read_csv(path)
@@ -534,11 +521,6 @@ if __name__ == "__main__":
         output_folder = f"../Result/{args.cot_mode}_prompt/gemini_filtered_data_y{args.y}n{args.n}/{args.model}/"
     os.makedirs(output_folder, exist_ok=True)
 
-    # Run with Chain-of-Thought enabled
-    # print(args.gemini_api_key)
-    # print(1/0)
-    # print(args.provide_aspect_num)
-    # print(2/0)
     if args.aspect_source == "csv":
         # Load aspect predictions from CSV
         aspect_predictions_map = load_prediction_csv("test_results.csv")

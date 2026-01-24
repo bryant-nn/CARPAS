@@ -27,14 +27,6 @@ def load_texts_from_json(folder_path: str, content_key: str = 'document') -> Tup
     texts = []
     ids = []
 
-    # for i in range(1, 221):
-    #     filename = f"synthetic_article_{i}.json"
-    #     with open(os.path.join(folder_path, filename), 'r', encoding='utf-8') as f:
-    #             data = json.load(f)
-    #             content = data.get(content_key, '').strip()
-    #             if content:
-    #                 texts.append(content)
-    #                 ids.append(filename)
 
     for filename in os.listdir(folder_path):
         if filename.endswith('.json'):
@@ -179,11 +171,7 @@ def save_filtered_jsons(original_folder: str, output_folder: str, filenames: Lis
     """
     os.makedirs(output_folder, exist_ok=True)
 
-    n = 0
     for idx in indices_to_keep:
-        # n += 1
-        # if n % 20 == 0:
-        #     break
         filename = filenames[idx]
         with open(os.path.join(original_folder, filename), 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -203,8 +191,6 @@ def filter_near_duplicate_jsons(input_dir: str, output_dir: str, bge_threshold: 
     """
     texts, ids = load_texts_from_json(input_dir)
 
-    # print(f"file: {}")
-    # print(f"Loaded {len(texts)} texts.")
     
     bleu_matrix = compute_pairwise_bleu_matrix(texts)
     jac_matrix = compute_pairwise_jaccard(texts)

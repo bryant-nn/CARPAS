@@ -33,7 +33,6 @@ TOKEN_LIMIT_PER_MIN = 12000
 def wait_for_token_budget(tokens_needed: int):
     now = time.time()
 
-    # 移除超過60秒的紀錄
     while token_window and now - token_window[0][0] > 61:
         token_window.popleft()
 
@@ -138,8 +137,6 @@ Aspects:
     estimate_prompt_tokens = estimate_tokens(prompt)
     estimated_tokens = estimate_prompt_tokens + 1500  # prompt word count + buffer
     wait_for_token_budget(estimated_tokens)
-    # print("🔄 Checking coverage...")
-    # print(f"🔄 Prompt:\n{prompt}")
 
     first_response = llm.invoke([HumanMessage(content=prompt)])
     # print(f"🔄 Model Response:\n{first_response.content.strip()}")
@@ -218,8 +215,6 @@ Only return the updated list of aspect titles in the following list format:
     estimated_tokens = estimate_prompt_tokens + 2500  # prompt word count + buffer
     wait_for_token_budget(estimated_tokens)
 
-    # print("🔄 Revising aspects...")
-    # print(f"🔄 Prompt:\n{prompt}")
 
     first_response = llm.invoke([HumanMessage(content=prompt)])
     # print(f"🔄 Model Response:\n{first_response.content.strip()}")
@@ -234,14 +229,6 @@ Only return the updated list of aspect titles in the following list format:
 
     match = re.search(r"\[.*?\]", response, re.DOTALL)
 
-    # if not match:
-    #     print(f"❌ Failed to parse response from model. Response was:\n{response}")
-    #     print(1/0)
-
-    # print(f"🔄 Model Response:\n{match.group(0)}")
-    # print(1/0)
-    # else:
-    # print(f"🔄 Model Response:\n{response}")
     revised = ast.literal_eval(match.group(0))
 
     # time.sleep(60)
@@ -466,8 +453,6 @@ if __name__ == "__main__":
     for key, value in epidemic_report_template_dict.items():
         all_aspects.extend(value if isinstance(value, list) else [value])
 
-    # with open('../../Synthetic_data/gpt4o_filtered_data_220/train_files.json', 'r') as f:
-    #     train_files = json.load(f)
 
     with open("../Synthetic_data/test.json", "r", encoding='utf-8') as f:
         test_files = json5.load(f)

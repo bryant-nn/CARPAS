@@ -22,8 +22,6 @@ def get_available_gpu(threshold=0.9):
         used = meminfo.used
         free = meminfo.free
 
-        # print(f"GPU {i} - Total: {total}, Used: {used}, Free: {free}")
-
         if free / total > threshold:
             available_gpus.append(i)
 
@@ -41,7 +39,6 @@ def calculate_rouge(predicted, ground_truth):
 def calculate_bertscore(reference_summaries, generated_summaries):
     # available_gpus = get_available_gpu(0.5)
 
-# 如果有多个 GPU 可用，选择第一个可用的 GPU
     # device_ = f'cuda:{available_gpus[0]}' if available_gpus else 'cuda:0'
     device_ = "cuda:0"
     

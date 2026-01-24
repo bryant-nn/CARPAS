@@ -1,7 +1,7 @@
 #!/bin/bash
 
 MAX_RETRIES=5
-MAX_PARALLEL_JOBS=2  # 同時執行幾個實驗
+MAX_PARALLEL_JOBS=2 
 FAILED_JOBS_FILE="failed_jobs_langgraph1.txt"
 > "$FAILED_JOBS_FILE"
 
@@ -33,7 +33,6 @@ export -f run_with_retry
 export MAX_RETRIES
 export FAILED_JOBS_FILE
 
-# === 所有實驗組合 ===
 JOBS=(
 "python langgraph_guided.py --memory False --model o3-mini-2025-01-31 --y 2 --n 2"
 "python langgraph_guided.py --memory False --model o3-mini-2025-01-31 --y 2 --n 0"
@@ -45,11 +44,8 @@ JOBS=(
 "python langgraph_guided.py --memory False --model o3-mini-2025-01-31 --y 6 --n 0"
 "python langgraph_guided.py --memory False --model o3-mini-2025-01-31 --y 0 --n 6"
 )
-
-# === 執行所有實驗（平行）===
 printf "%s\n" "${JOBS[@]}" | xargs -P $MAX_PARALLEL_JOBS -I {} bash -c 'run_with_retry "$@"' _ {}
 
-# === 最後報告 ===
 echo ""
 if [ -s "$FAILED_JOBS_FILE" ]; then
   echo "❗ The following jobs failed after $MAX_RETRIES attempts:"

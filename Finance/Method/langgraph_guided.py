@@ -32,7 +32,6 @@ TOKEN_LIMIT_PER_MIN = 12000
 def wait_for_token_budget(tokens_needed: int):
     now = time.time()
 
-    # 移除超過60秒的紀錄
     while token_window and now - token_window[0][0] > 61:
         token_window.popleft()
 
@@ -220,9 +219,6 @@ Only return the updated list of aspect titles in the following list format:
     estimated_tokens = estimate_prompt_tokens + 2500  # prompt word count + buffer
     wait_for_token_budget(estimated_tokens)
 
-    # print("🔄 Revising aspects...")
-    # print(f"🔄 Prompt:\n{prompt}")
-
     first_response = llm.invoke([HumanMessage(content=prompt)])
     # print(f"🔄 Model Response:\n{first_response.content.strip()}")
     response = first_response.content.strip().replace("```json", "").replace("```", "")
@@ -236,14 +232,6 @@ Only return the updated list of aspect titles in the following list format:
 
     match = re.search(r"\[.*?\]", response, re.DOTALL)
 
-    # if not match:
-    #     print(f"❌ Failed to parse response from model. Response was:\n{response}")
-    #     print(1/0)
-
-    # print(f"🔄 Model Response:\n{match.group(0)}")
-    # print(1/0)
-    # else:
-    # print(f"🔄 Model Response:\n{response}")
     revised = ast.literal_eval(match.group(0))
 
     # time.sleep(60)
@@ -282,7 +270,6 @@ Please only return your output in the following JSON format:
     estimated_tokens = estimate_prompt_tokens + 2800  # prompt word count + buffer
     wait_for_token_budget(estimated_tokens)
 
-    # print("🔄 Summarizing aspects...")
     
     first_response = llm.invoke([HumanMessage(content=prompt)])
     response = first_response.content.strip().replace("```json", "").replace("```", "")
@@ -294,13 +281,9 @@ Please only return your output in the following JSON format:
 
     record_token_usage(tokens)
 
-    # print(f"🔄 Model Response:\n{response}")
     match = re.search(r"\{.*?\}", response, re.DOTALL)
 
-    # print(f"🔄 Model Response:\n{match.group(0)}")
     summaries = ast.literal_eval(match.group(0))
-
-    # time.sleep(40)
 
     return {**state, "summaries": summaries, "steps": state.get("steps", 0) + 1, "tokens": state.get("tokens", 0) + tokens}
 
@@ -430,10 +413,6 @@ def process_files(folder_path: List[str], all_aspects: List[str], output_path: s
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
 
-        # print(f"✅ Processed: {file_path}, Total Steps: {graph_result['steps']}")
-
-        # if n == 10:
-        # break
 
 def list_all_json_files(root_dir):
     json_files = []
@@ -466,9 +445,6 @@ if __name__ == "__main__":
     all_aspects = []
     for key, value in report_template_dict.items():
         all_aspects.extend(value if isinstance(value, list) else [value])
-
-    # with open('../../Synthetic_data/gpt4o_filtered_data_220/train_files.json', 'r') as f:
-    #     train_files = json.load(f)
 
     train_files = list_all_json_files("../../Synthetic_data/gemini_filtered_data/")
 

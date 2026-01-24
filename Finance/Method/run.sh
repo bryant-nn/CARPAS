@@ -1,7 +1,7 @@
 #!/bin/bash
 
 MAX_RETRIES=3
-MAX_PARALLEL_JOBS=5  # 同時執行幾個實驗
+MAX_PARALLEL_JOBS=5 
 FAILED_JOBS_FILE="failed_jobs.txt"
 > "$FAILED_JOBS_FILE"
 
@@ -33,7 +33,6 @@ export -f run_with_retry
 export MAX_RETRIES
 export FAILED_JOBS_FILE
 
-# === 所有實驗組合 ===
 JOBS=(
 "python prompt.py --cot_mode direct --model gpt-4o-mini --y 2 --n 2 --provide_aspect_num --aspect_source csv"
 "python prompt.py --cot_mode direct --model gpt-4o-mini --y 2 --n 0 --provide_aspect_num --aspect_source csv"
@@ -112,10 +111,8 @@ JOBS=(
 # "python langgraph_guided.py --memory False --model gpt-4o --y 0 --n 6"
 )
 
-# === 執行所有實驗（平行）===
 printf "%s\n" "${JOBS[@]}" | xargs -P $MAX_PARALLEL_JOBS -I {} bash -c 'run_with_retry "$@"' _ {}
 
-# === 最後報告 ===
 echo ""
 if [ -s "$FAILED_JOBS_FILE" ]; then
   echo "❗ The following jobs failed after $MAX_RETRIES attempts:"

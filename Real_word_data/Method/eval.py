@@ -37,10 +37,6 @@ def calculate_rouge(predicted, ground_truth):
 
 # Function to calculate BERTScore for reference and generated summaries
 def calculate_bertscore(reference_summaries, generated_summaries):
-    # available_gpus = get_available_gpu(0.5)
-
-# 如果有多个 GPU 可用，选择第一个可用的 GPU
-    # device_ = f'cuda:{available_gpus[0]}' if available_gpus else 'cuda:0'
     device_ = "cuda:0"
     
     scorer = BERTScorer(model_type="microsoft/deberta-v3-large", lang="en", device=device_)

@@ -10,15 +10,12 @@ from torch.utils.tensorboard import SummaryWriter
 import argparse
 import random
 
-# === DDP 相關函式庫 ===
 import torch.multiprocessing as mp
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
 
 from peft import get_peft_model, LoraConfig, TaskType, PeftModel
-# import os
-# os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 def set_seed(seed: int = 42):
     """Sets the seed for reproducibility."""
@@ -28,7 +25,7 @@ def set_seed(seed: int = 42):
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
-    # 確保 cudnn 的確定性，可能會稍微影響性能，但在實驗階段很有用
+
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
@@ -45,8 +42,6 @@ class Config:
     num_epochs = 30
     max_length = 768 #768
     patience = 30
-    # device 不再需要，因為會由 DDP 指定
-    # device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # === 2. Data Loading Logic ===
 # NEW FUNCTION: Loads data by reading a pointer file containing relative paths
@@ -148,23 +143,19 @@ class CustomDataCollator:
         self.data_collator = data_collator
 
     def __call__(self, features):
-        # 1. 先將非張量類型的 'source_file' 從 features 中分離出來
+
         source_files = [f.pop("source_file") for f in features]
         
-        # 2. 讓原始的 DataCollatorWithPadding 處理它認識的部分
-        #   (input_ids, attention_mask, labels)
         batch = self.data_collator(features)
-        
-        # 3. 將分離出來的 source_file 再加回到批次中
         batch["source_file"] = source_files
         
         return batch
 
-# === DDP 設定函式 ===
+
 def setup(rank, world_size):
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '12355'
-    # 初始化程序群組
+
     dist.init_process_group("nccl", rank=rank, world_size=world_size)
 
 def cleanup():
@@ -251,12 +242,10 @@ def main_worker(rank, world_size, config):
     print(f"Running DDP on rank {rank}.")
     setup(rank, world_size)
     
-    # 只有主程序 (rank 0) 才需要設定 TensorBoard
     writer = SummaryWriter(log_dir=os.path.join(config.output_dir, 'runs')) if rank == 0 else None
 
     tokenizer = AutoTokenizer.from_pretrained(config.model_name, trust_remote_code=True)
     
-    # 所有程序都需要載入資料，但只有主程序顯示進度條
     if rank == 0:
         print("Master process (rank 0) is loading data...")
     train_samples = load_data_from_pointer_file(config.train_pointer_file, config.data_base_dir)
@@ -271,24 +260,18 @@ def main_worker(rank, world_size, config):
         print(f"Validation samples: {len(valid_dataset)}")
         print("-----------------------\n")
     
-    # === DDP 核心修改 ===
-    # 1. 使用 DistributedSampler
     train_sampler = DistributedSampler(train_dataset, num_replicas=world_size, rank=rank)
     
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer, padding=True)
     custom_collator = CustomDataCollator(data_collator=data_collator)
-    # DataLoader 中加入 sampler，並關閉 shuffle
     train_dataloader = DataLoader(train_dataset, batch_size=config.batch_size, collate_fn=custom_collator, sampler=train_sampler, shuffle=False)
-    # 驗證時通常在單一 GPU 上進行，或者也可以用 sampler
     val_dataloader = DataLoader(valid_dataset, batch_size=config.batch_size, collate_fn=custom_collator)
 
     # test_dataloader = DataLoader(test_dataset, batch_size=config.batch_size, collate_fn=data_collator)
 
-    # 2. 將模型分配到對應的 GPU
     device = torch.device(f'cuda:{rank}')
     model = AspectCountModel(config.model_name).to(device)
-    # print(model)
-    # print(1/0)
+
     
 
     peft_config = LoraConfig(
@@ -299,7 +282,7 @@ def main_worker(rank, world_size, config):
             "k_proj",
             "v_proj",
             "o_proj",
-            # 如果記憶體依然充足，可以嘗試加入 MLP 層進行實驗
+
             "gate_proj",
             "up_proj",
             "down_proj",
@@ -313,33 +296,8 @@ def main_worker(rank, world_size, config):
     #     param.requires_grad = True
 
     if rank == 0:
-        # 打印出可訓練參數的數量，您會看到它大幅減少！
         model.print_trainable_parameters()
     
-    # # 凍結層
-    # # if rank == 0:
-    # #     print("Freezing transformer layers...")
-    # # for param in model.transformer.parameters():
-    # #     param.requires_grad = False
-
-    # # --- 1. 將模型的參數分組 ---
-    # # 找到所有 LoRA 相關的參數
-    # lora_params = [p for n, p in model.named_parameters() if "lora_" in n]
-    # # 找到所有迴歸頭相關的參數
-    # head_params = [p for n, p in model.named_parameters() if "regressor" in n]
-
-    # # # 確保所有迴歸頭參數都是可訓練的 (這是您已加上的步驟)
-    # for param in head_params:
-    #     param.requires_grad = True
-
-    # # --- 2. 建立帶有不同學習率的優化器 ---
-    # # 創建兩個參數群組，每個群組有自己的學習率
-    # optimizer = optim.AdamW([
-    #     {'params': lora_params, 'lr': config.learning_rate},         # e.g., 2e-5 for LoRA
-    #     {'params': head_params, 'lr': 1e-4}                          # e.g., 1e-4 for the new head
-    # ])
-            
-    # 3. 用 DDP 包裝模型
     model = DDP(model, device_ids=[rank])
 
     
@@ -360,7 +318,6 @@ def main_worker(rank, world_size, config):
     global_step = 0
     
     for epoch in range(config.num_epochs):
-        # 設置 sampler 的 epoch，確保每個 epoch 的 shuffle 都不同
         train_sampler.set_epoch(epoch)
         
         if rank == 0:
@@ -368,7 +325,6 @@ def main_worker(rank, world_size, config):
         
         train_loss, global_step = train_epoch(model, train_dataloader, optimizer, scheduler, loss_fn, device, writer, global_step, rank)
         
-        # 驗證和儲存模型只在主程序 (rank 0) 上執行
         if rank == 0:
             print(f"Epoch {epoch+1} Training Loss: {train_loss:.4f}")
             writer.add_scalar('Loss/train_epoch', train_loss, epoch)
@@ -384,23 +340,12 @@ def main_worker(rank, world_size, config):
                 epochs_no_improve = 0
                 print(f"Validation Accuracy improved to {val_acc:.4f}! Saving model...")
                 os.makedirs(config.output_dir, exist_ok=True)
-                # 重要：儲存 DDP 模型時，要儲存 model.module 的狀態
-                # torch.save(model.module.state_dict(), os.path.join(config.output_dir, "pytorch_model.bin"))
-                # # tokenizer.save_pretrained(config.output_dir) # tokenizer 是一樣的，不需要 model.module
-                # model.module.transformer.config.save_pretrained(config.output_dir) # 保存config
-                # tokenizer.save_pretrained(config.output_dir)
                 
-                # model.module.save_pretrained(config.output_dir)
-                # tokenizer.save_pretrained(config.output_dir) # Tokenizer 也一併儲存
-                # print(f"Model saved to {config.output_dir}")
-
                 unwrapped_model = model.module
     
                 # --- 2. CORRECTED SAVING LOGIC ---
-                # (a) 儲存 LoRA 適配器 (這部分不變)
                 unwrapped_model.save_pretrained(config.output_dir)
                 
-                # (b) 單獨儲存迴歸頭的 state_dict
                 head_state_dict = unwrapped_model.base_model.regressor.state_dict()
                 torch.save(head_state_dict, os.path.join(config.output_dir, "regressor_head.bin"))
                 # ---------------------------------
@@ -445,12 +390,9 @@ def run_testing(config):
     model = PeftModel.from_pretrained(base_model, config.output_dir)
     head_weights_path = os.path.join(config.output_dir, "regressor_head.bin")
     model.base_model.regressor.load_state_dict(torch.load(head_weights_path))
-    model.to(device) # 確保整個模型都在正確的設備上
-    model.eval() # 設定為評估模式
+    model.to(device) 
+    model.eval() 
     
-    # model_path = os.path.join(config.output_dir, "pytorch_model.bin")
-    # print(f"Loading saved weights from: {model_path}")
-    # model.load_state_dict(torch.load(model_path, map_location=device))
     
     # 3. Evaluate on Test Set
     loss_fn = nn.L1Loss()
