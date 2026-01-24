@@ -50,7 +50,6 @@ class ChatEval:
             return completion.choices[0].message.content
         except Exception as e:
             print(f"An error occurred while calling the OpenAI API: {e}")
-            print(1/0)
             return "Error: Could not get a response from the model."
 
     def get_score_and_reason(self, prompt: str) -> (int, str):

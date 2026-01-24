@@ -245,7 +245,6 @@ def main():
         return
         
     print(f"Found {len(files_to_process)} JSON file(s) to evaluate.")
-    # print(1/0)
     
     evaluator = ChatEval(model_name='gpt-4-turbo')
     device = 'cuda:1' if torch.cuda.is_available() else 'cpu'

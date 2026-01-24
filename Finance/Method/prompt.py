@@ -266,8 +266,6 @@ def generate_revised_aspects_and_summary(
 
         for _ in range(num_samples):
             prompt, predicted_aspect_num, token_predict = build_prompt(article, aspects_str, style="cot")
-            # print(f"Prompt for {model}:\n{prompt}\n")
-            # print(1/0)
 
             total_aspects_nums.append(predicted_aspect_num)
 
@@ -281,10 +279,6 @@ def generate_revised_aspects_and_summary(
                 tokens2 = 0
             except:
                 parsed, tokens2 = parse_captain_result(response)
-
-            # time.sleep(45)
-            # print(f"Response from {model}:\n{response}\n")
-            # print(1/0)
 
             if parsed:
                 all_responses.append(parsed)

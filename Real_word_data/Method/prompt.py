@@ -267,8 +267,6 @@ def generate_revised_aspects_and_summary(
 
         for _ in range(num_samples):
             prompt, predicted_aspect_num, token_predict = build_prompt(article, aspects_str, style="cot")
-            # print(f"Prompt for {model}:\n{prompt}\n")
-            # print(1/0)
 
             total_aspects_nums.append(predicted_aspect_num)
 

@@ -216,9 +216,6 @@ Only return the updated list of aspect titles in the following list format:
     estimated_tokens = estimate_prompt_tokens + 2500  # prompt word count + buffer
     wait_for_token_budget(estimated_tokens)
 
-    # print("🔄 Revising aspects...")
-    # print(f"🔄 Prompt:\n{prompt}")
-
     first_response = llm.invoke([HumanMessage(content=prompt)])
     # print(f"🔄 Model Response:\n{first_response.content.strip()}")
     response = first_response.content.strip().replace("```json", "").replace("```", "")
@@ -417,10 +414,6 @@ def process_files(folder_path: List[str], all_aspects: List[str], output_path: s
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
 
-        # print(f"✅ Processed: {file_path}, Total Steps: {graph_result['steps']}")
-
-        # if n == 10:
-        # break
 
 def list_all_json_files(root_dir):
     json_files = []

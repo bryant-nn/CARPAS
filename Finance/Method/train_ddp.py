@@ -259,7 +259,6 @@ def main_worker(rank, world_size, config):
         print(f"Validation samples: {len(valid_dataset)}")
         print("-----------------------\n")
     
-    # 1. 使用 DistributedSampler
     train_sampler = DistributedSampler(train_dataset, num_replicas=world_size, rank=rank)
     
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer, padding=True)
@@ -389,9 +388,6 @@ def run_testing(config):
     model.to(device) 
     model.eval()
     
-    # model_path = os.path.join(config.output_dir, "pytorch_model.bin")
-    # print(f"Loading saved weights from: {model_path}")
-    # model.load_state_dict(torch.load(model_path, map_location=device))
     
     # 3. Evaluate on Test Set
     loss_fn = nn.L1Loss()
