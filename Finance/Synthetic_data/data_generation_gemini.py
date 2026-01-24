@@ -16,15 +16,25 @@ load_dotenv()
 
 # Initialize OpenAI client
 def load_client(model):
-    if 'gpt' in model:
+    """
+    Loads the appropriate LLM client based on the model name.
+    - OpenAI models (gpt/o1/o3) use OpenAI API
+    - All other models (including Gemini) use OpenRouter API
+    """
+    if 'gpt' in model.lower() or 'o1' in model.lower() or 'o3' in model.lower():
         api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable not set.")
         api_base = "https://api.openai.com/v1"
         client = openai.OpenAI(api_key=api_key, base_url=api_base)
-    elif 'gemini' in model:
-        api_key = os.getenv("GEMINI_API_KEY")
+    else:
+        # All other models (Gemini, Claude, Llama, Mistral, etc.) via OpenRouter
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            raise ValueError("OPENROUTER_API_KEY environment variable not set.")
         client = openai.OpenAI(
             api_key=api_key,
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+            base_url="https://openrouter.ai/api/v1"
         )
 
     return client

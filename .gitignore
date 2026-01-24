@@ -11,6 +11,7 @@ Thumbs.db
 # Python
 ############################
 venv/
+env/
 .conda/
 __pycache__/
 *.py[cod]

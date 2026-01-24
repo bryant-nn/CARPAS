@@ -1,0 +1,7 @@
+num_aspects,total_files,avg_doc_tokens,avg_summary_tokens_per_aspect,num_categories
+4,202,4449.49,119.54,20
+5,206,4764.96,110.77,20
+6,202,4827.38,104.66,20
+7,201,4688.01,100.53,20
+8,207,5032.07,95.19,20
+TOTAL,1018,4753.87,104.14,20

@@ -1,0 +1,20 @@
+{
+  "document": "Operator:\nGood day",
+  "aspects": [
+    "Customer acquisition cost (CAC): Efficiency and ROI of marketing spend.",
+    "Logistics and shipping costs: Impact of supply chain disruptions.",
+    "Holiday season preparation: Inventory levels and expected demand.",
+    "Active buyer count growth: User acquisition and retention rates.",
+    "Average order value (AOV) trends: Factors influencing AOV changes."
+  ],
+  "aspect_summary": {
+    "Customer acquisition cost (CAC): Efficiency and ROI of marketing spend": "Not mentioned in the transcript.",
+    "Logistics and shipping costs: Impact of supply chain disruptions": "Not mentioned in the transcript.",
+    "Holiday season preparation: Inventory levels and expected demand": "Not mentioned in the transcript.",
+    "Active buyer count growth: User acquisition and retention rates": "Not mentioned in the transcript.",
+    "Average order value (AOV) trends: Factors influencing AOV changes": "Not mentioned in the transcript."
+  },
+  "num_aspects": 5,
+  "category": "ecommerce",
+  "category_name": "E-Commerce / Online Retail"
+}
